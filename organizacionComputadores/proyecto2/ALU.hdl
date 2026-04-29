@@ -1,3 +1,12 @@
+/*********
+* ALU.hdl – ALU (Arithmetic Logic Unit):
+* Computes out = one of the following functions:
+* 0, 1, -1, x, y, !x, !y, -x, -y,
+* x + 1, y + 1, x - 1, y - 1,
+* x + y, x - y, y - x,
+* x & y, x | y
+* Autor 1: Jeronimo Ramirez
+*********/
 CHIP ALU {
 	IN
 		x[16], y[16],  // 16-bit inputs

@@ -1,4 +1,3 @@
-
 CHIP Memory {
 IN in[16], load, address[15];
 OUT out[16];
