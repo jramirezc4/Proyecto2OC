@@ -1,0 +1,120 @@
+CHIP ALU {
+	IN
+		x[16], y[16],  // 16-bit inputs
+		zx, // zero the x input?
+		nx, // negate the x input?
+		zy, // zero the y input?
+		ny, // negate the y input?
+		f,  // compute (out = x + y) or (out = x & y)?
+			// shift left if (zx=nx=zy=ny=0 and f = 0 and no = 1)
+			// shift right if (zx=nx=zy=ny=0 and f = 1 and no = 1)
+		no; // negate the out output?
+	OUT
+		out[16], // 16-bit output
+		zr,      // if (out == 0) equals 1, else 0
+		ng,      // if (out < 0)  equals 1, else 0
+		result;  // if (shift left) equals in[15]
+				 // if (shift right) equals in[0]
+
+	PARTS:
+	// x
+	Mux16(a=x, b=false, sel=zx, out=x1);
+	Not16(in=x1, out=nx1);
+	Mux16(a=x1, b=nx1, sel=nx, out=x2);
+
+	// y
+	Mux16(a=y, b=false, sel=zy, out=y1);
+	Not16(in=y1, out=ny1);
+	Mux16(a=y1, b=ny1, sel=ny, out=y2);
+
+	// and/add
+	And16(a=x2, b=y2, out=andOut);
+	Add16(a=x2, b=y2, out=addOut);
+	Mux16(a=andOut, b=addOut, sel=f, out=aluOut);
+
+	// not
+	Not16(in=aluOut, out=noOut);
+	Mux16(
+		a=aluOut, b=noOut, sel=no,
+		out[0]=n0, out[1]=n1, out[2]=n2, out[3]=n3,
+		out[4]=n4, out[5]=n5, out[6]=n6, out[7]=n7,
+		out[8]=n8, out[9]=n9, out[10]=n10, out[11]=n11,
+		out[12]=n12, out[13]=n13, out[14]=n14, out[15]=n15);
+
+	// shift enable when zx=nx=zy=ny=0 and no=1
+	Not(in=zx, out=zx0);
+	Not(in=nx, out=nx0);
+	Not(in=zy, out=zy0);
+	Not(in=ny, out=ny0);
+	And(a=zx0, b=nx0, out=sh1);
+	And(a=zy0, b=ny0, out=sh2);
+	And(a=sh1, b=sh2, out=sh3);
+	And(a=sh3, b=no, out=shiftEn);
+
+	// shifter (uses x input after zx/nx)
+	Shifter(
+		in=x2, direction=f,
+		out[0]=s0, out[1]=s1, out[2]=s2, out[3]=s3,
+		out[4]=s4, out[5]=s5, out[6]=s6, out[7]=s7,
+		out[8]=s8, out[9]=s9, out[10]=s10, out[11]=s11,
+		out[12]=s12, out[13]=s13, out[14]=s14, out[15]=s15,
+		result=shiftResult);
+
+	// select normal ALU or shifter output
+	Mux(a=n0, b=s0, sel=shiftEn, out=o0);
+	Mux(a=n1, b=s1, sel=shiftEn, out=o1);
+	Mux(a=n2, b=s2, sel=shiftEn, out=o2);
+	Mux(a=n3, b=s3, sel=shiftEn, out=o3);
+	Mux(a=n4, b=s4, sel=shiftEn, out=o4);
+	Mux(a=n5, b=s5, sel=shiftEn, out=o5);
+	Mux(a=n6, b=s6, sel=shiftEn, out=o6);
+	Mux(a=n7, b=s7, sel=shiftEn, out=o7);
+	Mux(a=n8, b=s8, sel=shiftEn, out=o8);
+	Mux(a=n9, b=s9, sel=shiftEn, out=o9);
+	Mux(a=n10, b=s10, sel=shiftEn, out=o10);
+	Mux(a=n11, b=s11, sel=shiftEn, out=o11);
+	Mux(a=n12, b=s12, sel=shiftEn, out=o12);
+	Mux(a=n13, b=s13, sel=shiftEn, out=o13);
+	Mux(a=n14, b=s14, sel=shiftEn, out=o14);
+	Mux(a=n15, b=s15, sel=shiftEn, out=o15);
+
+	Or(a=o0, b=false, out=out[0]);
+	Or(a=o1, b=false, out=out[1]);
+	Or(a=o2, b=false, out=out[2]);
+	Or(a=o3, b=false, out=out[3]);
+	Or(a=o4, b=false, out=out[4]);
+	Or(a=o5, b=false, out=out[5]);
+	Or(a=o6, b=false, out=out[6]);
+	Or(a=o7, b=false, out=out[7]);
+	Or(a=o8, b=false, out=out[8]);
+	Or(a=o9, b=false, out=out[9]);
+	Or(a=o10, b=false, out=out[10]);
+	Or(a=o11, b=false, out=out[11]);
+	Or(a=o12, b=false, out=out[12]);
+	Or(a=o13, b=false, out=out[13]);
+	Or(a=o14, b=false, out=out[14]);
+	Or(a=o15, b=false, out=out[15]);
+
+	Mux(a=false, b=shiftResult, sel=shiftEn, out=result);
+
+	// zr
+	Or(a=o0, b=o1, out=or01);
+	Or(a=o2, b=o3, out=or23);
+	Or(a=o4, b=o5, out=or45);
+	Or(a=o6, b=o7, out=or67);
+	Or(a=o8, b=o9, out=or89);
+	Or(a=o10, b=o11, out=or1011);
+	Or(a=o12, b=o13, out=or1213);
+	Or(a=o14, b=o15, out=or1415);
+	Or(a=or01, b=or23, out=or0123);
+	Or(a=or45, b=or67, out=or4567);
+	Or(a=or89, b=or1011, out=or891011);
+	Or(a=or1213, b=or1415, out=or12131415);
+	Or(a=or0123, b=or4567, out=or07);
+	Or(a=or891011, b=or12131415, out=or815);
+	Or(a=or07, b=or815, out=orAll);
+	Not(in=orAll, out=zr);
+
+	// ng
+	Or(a=o15, b=false, out=ng);
+}
