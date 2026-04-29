@@ -1,0 +1,75 @@
+/*********
+* Shifter.hdl - Desplazamiento de un bit a la izquierda o derecha
+* Autor 1:
+* Autor 2:
+*
+* Implementacion del siguiente algoritmo:
+* if (direction == 0){
+* out[0] = 0;
+* for(i=1; i < 16; i++)
+* out[i] = in[i-1];
+* }
+* else{
+* out[15] = 0;
+* for(i=0; i < 15; i++)
+* out[i] = in[i+1];
+* }
+*********/
+CHIP Shifter {
+IN in[16], // Dato a correr
+   direction; // Direccion de corrimiento (0 = izquierda, 1 = derecha)
+OUT out[16], // Dato corrido en la direccion solicitada
+    result; // bit que sale por el extremo correspondiente
+
+PARTS:
+// Left shift: out[0]=0, out[1..15]=in[0..14], result=in[15]
+Or(a=false, b=false, out=left0);
+Or(a=in[0], b=false, out=left1);
+Or(a=in[1], b=false, out=left2);
+Or(a=in[2], b=false, out=left3);
+Or(a=in[3], b=false, out=left4);
+Or(a=in[4], b=false, out=left5);
+Or(a=in[5], b=false, out=left6);
+Or(a=in[6], b=false, out=left7);
+Or(a=in[7], b=false, out=left8);
+Or(a=in[8], b=false, out=left9);
+Or(a=in[9], b=false, out=left10);
+Or(a=in[10], b=false, out=left11);
+Or(a=in[11], b=false, out=left12);
+Or(a=in[12], b=false, out=left13);
+Or(a=in[13], b=false, out=left14);
+Or(a=in[14], b=false, out=left15);
+Or(a=in[15], b=false, out=leftResult);
+
+// Right shift: out[15]=0, out[0..14]=in[1..15], result=in[0]
+Or(a=in[1], b=false, out=right0);
+Or(a=in[2], b=false, out=right1);
+Or(a=in[3], b=false, out=right2);
+Or(a=in[4], b=false, out=right3);
+Or(a=in[5], b=false, out=right4);
+Or(a=in[6], b=false, out=right5);
+Or(a=in[7], b=false, out=right6);
+Or(a=in[8], b=false, out=right7);
+Or(a=in[9], b=false, out=right8);
+Or(a=in[10], b=false, out=right9);
+Or(a=in[11], b=false, out=right10);
+Or(a=in[12], b=false, out=right11);
+Or(a=in[13], b=false, out=right12);
+Or(a=in[14], b=false, out=right13);
+Or(a=in[15], b=false, out=right14);
+Or(a=false, b=false, out=right15);
+Or(a=in[0], b=false, out=rightResult);
+
+// Select output based on direction
+Mux16(
+    a[0]=left0, a[1]=left1, a[2]=left2, a[3]=left3,
+    a[4]=left4, a[5]=left5, a[6]=left6, a[7]=left7,
+    a[8]=left8, a[9]=left9, a[10]=left10, a[11]=left11,
+    a[12]=left12, a[13]=left13, a[14]=left14, a[15]=left15,
+    b[0]=right0, b[1]=right1, b[2]=right2, b[3]=right3,
+    b[4]=right4, b[5]=right5, b[6]=right6, b[7]=right7,
+    b[8]=right8, b[9]=right9, b[10]=right10, b[11]=right11,
+    b[12]=right12, b[13]=right13, b[14]=right14, b[15]=right15,
+    sel=direction, out=out);
+Mux(a=leftResult, b=rightResult, sel=direction, out=result);
+}
